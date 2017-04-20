@@ -1,12 +1,16 @@
 package engineTest;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
 import org.lwjgl.opengl.Display;
 import org.lwjgl.util.vector.Vector3f;
 
 import entities.Camera;
 import entities.Entity;
 import entities.Light;
-import models.RawModel;
+import entities.Player;
 import models.TexturedModel;
 import renderEngine.DisplayManager;
 import renderEngine.Loader;
@@ -15,50 +19,64 @@ import renderEngine.OBJLoader;
 import shaders.StaticShader;
 import terrain.Terrain;
 import textures.ModelTexture;
+import textures.TerrainTexture;
+import textures.TerrainTexturePack;
 
 public class MainGameLoop {
 	public static void main(String args[]) {
 		DisplayManager.createDisplay();
-		
 		Loader loader = new Loader();
 		StaticShader shader = new StaticShader();
 		
-		RawModel model = OBJLoader.loadObjModel("dragon", loader);
-		ModelTexture texture = new ModelTexture(loader.loadTexture("purple"));
-		TexturedModel texturedModel = new TexturedModel(model, texture);
+		Light light = new Light(new Vector3f(20000, 40000, 20000), new Vector3f(1, 1, 1));
 		
-		texture.setShineDamper(10);
-		texture.setReflectivity(1);
+		TexturedModel treeModel = new TexturedModel(OBJLoader.loadObjModel("model_tree", loader), new ModelTexture(loader.loadTexture("tex_tree")));
+		TexturedModel grassModel = new TexturedModel(OBJLoader.loadObjModel("model_grass", loader), new ModelTexture(loader.loadTexture("tex_grass")));
+		TexturedModel fernModel = new TexturedModel(OBJLoader.loadObjModel("model_fern", loader), new ModelTexture(loader.loadTexture("tex_fern")));
 		
-		Entity entity = new Entity(texturedModel, new Vector3f(0, 0, -25), 0, 0, 0, 1);	
-		Light light = new Light(new Vector3f(200, 200, 100), new Vector3f(1, 1, 1));
+		grassModel.getTexture().setHasTransparency(true);
+		grassModel.getTexture().setUseFakeLighting(true);
+		fernModel.getTexture().setHasTransparency(true);
 		
-		Terrain terrain0 = new Terrain(-1, 0, loader, new ModelTexture(loader.loadTexture("grass")));
-		Terrain terrain1 = new Terrain(0, 0, loader, new ModelTexture(loader.loadTexture("grass")));
-		Terrain terrain2 = new Terrain(1, 0, loader, new ModelTexture(loader.loadTexture("grass")));
-		Terrain terrain3 = new Terrain(-1, -1, loader, new ModelTexture(loader.loadTexture("grass")));
-		Terrain terrain4 = new Terrain(0, -1, loader, new ModelTexture(loader.loadTexture("grass")));
-		Terrain terrain5 = new Terrain(1, -1, loader, new ModelTexture(loader.loadTexture("grass")));
+		List<Entity> entities = new ArrayList<Entity>();
+		Random random = new Random();
+		
+		for(int i = 0; i < 500; i++) {
+			entities.add(new Entity(treeModel, new Vector3f(random.nextFloat() * 800 - 400, 0, random.nextFloat() * -600), 0, 0, 0, 3));
+			entities.add(new Entity(grassModel, new Vector3f(random.nextFloat() * 800 - 400, 0, random.nextFloat() * -600), 0, 0, 0, 1));
+			entities.add(new Entity(fernModel, new Vector3f(random.nextFloat() * 800 - 400, 0, random.nextFloat() * -600), 0, 0, 0, 0.6f));
+		}
+		
+		TerrainTexture backgroundTexture = new TerrainTexture(loader.loadTexture("ttex_grass"));
+		TerrainTexture rTexture = new TerrainTexture(loader.loadTexture("ttex_mud"));
+		TerrainTexture gTexture = new TerrainTexture(loader.loadTexture("ttex_grassFlowers"));
+		TerrainTexture bTexture = new TerrainTexture(loader.loadTexture("ttex_path"));
+		
+		TerrainTexturePack texturePack = new TerrainTexturePack(backgroundTexture, rTexture, gTexture, bTexture);
+		
+		TerrainTexture blendMap = new TerrainTexture(loader.loadTexture("bm_blendMap1"));
+		
+		Terrain terrain1 = new Terrain(0, -1, loader, texturePack, blendMap);
+		Terrain terrain2 = new Terrain(-1, -1, loader, texturePack, blendMap);
 		
 		Camera camera = new Camera();
-		camera.setPosition(new Vector3f(0, 10, 0));
-		
 		MasterRenderer renderer = new MasterRenderer();
+		
+		TexturedModel playerModel = new TexturedModel(OBJLoader.loadObjModel("model_player", loader), new ModelTexture(loader.loadTexture("tex_player")));
+		Player player = new Player(playerModel, new Vector3f(100, 0, -50), 0, 0, 0, 1);
+		
 		while(!Display.isCloseRequested()) {
 			camera.move();
+			player.move();
 			
-			
-			
-			entity.increaseRotation(0, 1, 0);
-			
-			renderer.processTerrain(terrain0);
 			renderer.processTerrain(terrain1);
 			renderer.processTerrain(terrain2);
-			renderer.processTerrain(terrain3);
-			renderer.processTerrain(terrain4);
-			renderer.processTerrain(terrain5);
 			
-			renderer.processEntity(entity);
+			for(Entity entity : entities) {
+				renderer.processEntity(entity);
+			}
+			
+			renderer.processEntity(player);
 			
 			renderer.render(light, camera);
 			DisplayManager.updateDisplay();

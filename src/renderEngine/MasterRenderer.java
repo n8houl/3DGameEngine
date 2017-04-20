@@ -9,6 +9,7 @@ import static org.lwjgl.opengl.GL11.glClear;
 import static org.lwjgl.opengl.GL11.glClearColor;
 import static org.lwjgl.opengl.GL11.glCullFace;
 import static org.lwjgl.opengl.GL11.glEnable;
+import static org.lwjgl.opengl.GL11.glDisable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,6 +32,10 @@ public class MasterRenderer {
 	private static final float NEAR_PLANE = 0.1f;
 	private static final float FAR_PLANE = 1000;
 	
+	private static final float RED = 0.5f;
+	private static final float GREEN = 0.5f;
+	private static final float BLUE = 0.5f;
+	
 	private Matrix4f projectionMatrix;
 	
 	private StaticShader shader = new StaticShader();
@@ -43,18 +48,26 @@ public class MasterRenderer {
 	private List<Terrain> terrains = new ArrayList<Terrain>();
 	
 	public MasterRenderer() {
-		glEnable(GL_CULL_FACE);
-		glCullFace(GL_BACK);
-		
+		enableCulling();
 		createProjectionMatrix();
 		
 		renderer = new EntityRenderer(shader, projectionMatrix);
 		terrainRenderer = new TerrainRenderer(terrainShader, projectionMatrix);
 	}
 	
+	public static void enableCulling() {
+		glEnable(GL_CULL_FACE);
+		glCullFace(GL_BACK);
+	}
+	
+	public static void disableCulling() {
+		glDisable(GL_CULL_FACE);	
+	}
+	
 	public void render(Light sun, Camera camera) {
 		prepare();
 		shader.start();
+		shader.loadSkyColor(RED, GREEN, BLUE);
 		shader.loadLight(sun);
 		shader.loadViewMatrix(camera);
 		
@@ -63,6 +76,7 @@ public class MasterRenderer {
 		shader.stop();
 		
 		terrainShader.start();
+		terrainShader.loadSkyColor(RED, GREEN, BLUE);
 		terrainShader.loadLight(sun);
 		terrainShader.loadViewMatrix(camera);
 		
@@ -94,7 +108,7 @@ public class MasterRenderer {
 	public void prepare() {
 		glEnable(GL_DEPTH_TEST);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glClearColor(0.2f, 0, 0, 1);
+		glClearColor(RED, GREEN, BLUE, 1);
 	}
 	
 	public void cleanUp() {

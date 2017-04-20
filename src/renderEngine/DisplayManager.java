@@ -1,6 +1,7 @@
 package renderEngine;
 
 import org.lwjgl.LWJGLException;
+import org.lwjgl.Sys;
 import org.lwjgl.opengl.ContextAttribs;
 import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
@@ -13,6 +14,9 @@ public class DisplayManager {
 	private static final int HEIGHT = 720;
 	private static final int FPS_CAP = 120;
 	private static final String TITLE = "Title Goes Here";
+	
+	private static long lastFrameTime = getCurrentTime();
+	private static float delta;
 	
 	public static void createDisplay() {
 		ContextAttribs attribs = new ContextAttribs(3, 2).withForwardCompatible(true).withProfileCore(true);
@@ -31,9 +35,21 @@ public class DisplayManager {
 	public static void updateDisplay() {
 		Display.sync(FPS_CAP);
 		Display.update();
+		
+		long currentFrameTime = getCurrentTime();
+		delta = (currentFrameTime - lastFrameTime) / 1000f;
+		lastFrameTime = currentFrameTime;
+	}
+	
+	public static float getFrameTimeSeconds() {
+		return delta;
 	}
 	
 	public static void closeDisplay() {
 		Display.destroy();
+	}
+	
+	private static long getCurrentTime() {
+		return Sys.getTime() * 1000 /Sys.getTimerResolution();
 	}
 }
