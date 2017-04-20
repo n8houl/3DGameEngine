@@ -17,7 +17,7 @@ void main() {
 	vec3 unitLightVector = normalize(toLightVector);
 	
 	float nDotl = dot(unitNormal, unitLightVector);
-	float brightness = max(nDotl, 0.0);
+	float brightness = max(nDotl, 0.1);
 	vec3 diffuse = brightness * lightColor;
 	
 	vec3 unitVectorToCamera = normalize(toCameraVector);
@@ -28,7 +28,7 @@ void main() {
 	specularFactor = max(specularFactor, 0.0);
 	
 	float dampedFactor = pow(specularFactor, shineDamper);
-	vec3 finalSpecular = dampedFactor * lightColor;
+	vec3 finalSpecular = dampedFactor * reflectivity * lightColor;
 	
     outColor = vec4(diffuse, 1.0) * texture(textureSampler, pass_textureCoords) + vec4(finalSpecular, 1.0);
 }
