@@ -59,11 +59,13 @@ public class MainGameLoop {
 		Terrain terrain1 = new Terrain(0, -1, loader, texturePack, blendMap);
 		Terrain terrain2 = new Terrain(-1, -1, loader, texturePack, blendMap);
 		
-		Camera camera = new Camera();
 		MasterRenderer renderer = new MasterRenderer();
 		
 		TexturedModel playerModel = new TexturedModel(OBJLoader.loadObjModel("model_player", loader), new ModelTexture(loader.loadTexture("tex_player")));
 		Player player = new Player(playerModel, new Vector3f(100, 0, -50), 0, 0, 0, 1);
+		
+		Camera camera = new Camera(player);
+
 		
 		while(!Display.isCloseRequested()) {
 			camera.move();
